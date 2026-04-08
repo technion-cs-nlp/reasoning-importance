@@ -1,0 +1,16 @@
+.claude
+.vscode
+__pycache__
+*.pyc
+logs
+shlarz*
+*.pt
+data/
+results/
+wandb
+slurm_scripts/*
+figures/
+nohup*
+*.log
+_OLD*
+*.tar.gz
