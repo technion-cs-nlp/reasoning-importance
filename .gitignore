@@ -13,6 +13,5 @@ figures/
 nohup*
 *.log
 _OLD*
-*.tar.gz
 TODELETE*
 implicit_reasoning.ipynb
