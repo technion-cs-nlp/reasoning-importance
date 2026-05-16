@@ -9,33 +9,6 @@ This codebase accompanies the paper ["Reasoning Models Know What's Important, an
 - Token-level features (e.g., LLM labels, surface-level features, semantic embeddings, lexcial statistics) fail at this classification task.
 
 
-## File hierarchy
-```
-.
-├── data/                             # Datasets (HARP variants)
-├── results/                          # Pipeline outputs (per model)
-├── appendix_experiments/             # Additional ablations that mostly appear in the paper's appendix
-│
-├── generate_reasoning_chains.py      # Stage 1: CoT generation
-├── identify_shortcut_steps.py        # Stage 2: shortcut detection
-├── eval_attribution_pruning.py       # Stage 3.1: attribution-based pruning
-├── eval_llm_pruning.py               # Stage 3.2: LLM-based pruning
-├── eval_random_pruning.py            # Stage 3.3: random pruning baseline
-├── train_removability_classifier.py  # Stage 4: activation-based importance (through removability) probes
-├── run_classifier_experiments.py     # Stage 4 aggregated
-
-├── run_token_based_experiments.py    # Stage 5: token-based classification
-├── train_removability_classifier.py  # Stage 6: probe training
-│
-├── cot_utils.py                      # CoT parsing (sentences, answers, LaTeX)
-├── general_utils.py                  # Model loading, generation, perplexity
-├── gradient_attribution.py           # Gradient-based sentence influence scores
-├── loading_utils.py                  # Load result files across pipeline stages
-├── removability_utils.py             # Removability labeling helpers
-├── consts.py                         # Shared constants
-└── tests/                            # Unit tests
-```
-
 ## Pipeline
 
 To recreate the results, you can run the stages in order:
@@ -75,6 +48,38 @@ Results are saved under `results/{model-name}/`.
 You may also download the pre-computed results (reported in the paper) and run a subset of the scripts on them.
 
 
+## File hierarchy
+```
+.
+├── data/                             # Datasets directory (download HARP into this directory)
+├── results/                          # Pipeline outputs (per model)
+├── appendix_experiments/             # Additional ablations that mostly appear in the paper's appendix
+│
+├── generate_reasoning_chains.py      # Stage 1: CoT generation
+├── identify_shortcut_steps.py        # Stage 2: shortcut detection
+├── eval_attribution_pruning.py       # Stage 3.1: attribution-based pruning
+├── eval_llm_pruning.py               # Stage 3.2: LLM-based pruning
+├── eval_random_pruning.py            # Stage 3.3: random pruning baseline
+├── train_removability_classifier.py  # Stage 4: activations-based importance (through removability) probes
+├── run_classifier_experiments.py     # Stage 4 aggregated
+├── removability_pred_llm_as_a_judge.py              # Stage 5: token-based importance classification (llm-as-a-judge)
+├── removability_pred_token_embeds_baselines.py.py   # Stage 5: token-based importance classification (token-based baselines)
+├── analyze_removability_probes.py    # Stage 6: Analyzing the activation-based probes
+│
+├── general_utils.py                  # Model loading, generation, perplexity
+├── consts.py                         # Shared constants
+├── cot_utils.py                      # CoT parsing (reasoning steps, extracting answers, LaTeX normalization, etc)
+├── cot_evaluations.py                # CoT evaluations (sufficiency, necessity)
+├── gradient_attribution.py           # Gradient-based sentence influence scores
+├── loading_utils.py                  # Load result files across pipeline stages
+├── removability_utils.py             # Helper functions for loading removability (importance) labels
+|
+├── harp_dataset.py                   # HARP dataset loader
+├── math_dataset.py                   # MATH-500 dataset loader
+|
+└── tests/                            # Unit tests
+```
+
 ## Supported model ids
 
 - `openai/gpt-oss-20b`
@@ -85,4 +90,4 @@ You may also download the pre-computed results (reported in the paper) and run a
 
 ## Dataset
 
-Two mathematical reasoning dataset: **HARP** (Download from https://github.com/aadityasingh/HARP into the `data` folder) and **MATH-500**
+Two mathematical reasoning dataset: **HARP** (Download from https://github.com/aadityasingh/HARP into the `data` folder) and **MATH-500** (Automatically downloaded via HuggingFace when used).
