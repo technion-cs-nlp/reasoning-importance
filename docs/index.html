@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reasoning Models Know What's Important &ndash; Project Page</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+    <style>
+        mark {
+            -webkit-animation: 3s highlight 1.5s 1 normal forwards;
+            animation: 3s highlight 1.5s 1 normal forwards;
+            background-color: none;
+            background: linear-gradient(90deg, #f7f5bc 50%, rgba(255, 255, 255, 0) 50%);
+            background-size: 200% 100%;
+            background-position: 100% 0;
+        }
+        @-webkit-keyframes highlight { to { background-position: 0 0; } }
+        @keyframes highlight { to { background-position: 0 0; } }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            background-color: #6a7fb5;
+            color: #fff;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        figure { text-align: center; margin: 20px auto; }
+        figcaption { padding-top: 10px; color: #555; font-style: italic; font-size: smaller; }
+
+        header h1 {
+            margin: 0;
+            font-size: 46px;
+            padding: 20px 20px 30px 20px;
+        }
+        header h2 { margin: 10px 0 0; font-weight: 400; }
+        header address a { font-size: 22px; }
+        header address { color: #d6e2ff; }
+        header address .author-link { color: #fff; text-decoration: none; }
+        header address .author-link:hover { text-decoration: underline; }
+        header address institute { color: #000; font-size: 16px; }
+        header address sup { color: #000; }
+
+        .container { width: 70%; margin: 40px auto; }
+        section { margin-bottom: 50px; }
+
+        .subtitle {
+            font-size: 28px;
+            border-left: 5px solid #6a7fb5;
+            padding-left: 10px;
+            color: #333;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        section p { font-size: 18px; line-height: 1.6; margin-top: 10px; }
+
+        .methodology {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-size: 18px;
+        }
+        .methodology h3 { font-size: 22px; color: #444; margin-top: 10px; }
+        .methodology ul { margin-left: 0; padding-left: 20px; }
+
+        footer { background-color: #333; color: #fff; text-align: center; padding: 5px 0; }
+        footer p { margin: 0; font-size: 16px; }
+
+        .card {
+            display: flex; flex-direction: column;
+            background-color: #fff; border: 1px solid rgba(0,0,0,.125); border-radius: .25rem;
+        }
+        .card-header {
+            padding: .75rem 1.25rem; margin: 0;
+            background-color: #f7f7f9; border-bottom: 1px solid rgba(0,0,0,.125);
+        }
+        .card-block { flex: 1 1 auto; padding: 1.25rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Reasoning Models Know What's Important,<br>and Encode It in Their Activations</h1>
+    <address>
+        <nobr><a href="https://yaniv.nikankin.com/" target="_blank" class="author-link">Yaniv Nikankin</a><sup>1</sup>,</nobr>
+        <nobr><a href="https://mtutek.github.io/" target="_blank" class="author-link">Martin Tutek</a><sup>2</sup>,</nobr>
+        <nobr><a href="https://tomerashuach.github.io/" target="_blank" class="author-link">Tomer Ashuach</a><sup>1</sup>,</nobr>
+        <nobr><a href="http://futuretech.mit.edu/team/jonathan-rosenfeld" target="_blank" class="author-link">Jonathan Rosenfeld</a><sup>3</sup>,</nobr>
+        <nobr><a href="https://belinkov.com/" target="_blank" class="author-link">Yonatan Belinkov</a><sup>1,4</sup></nobr>
+        <br>
+        <nobr><sup>1</sup><institute>Technion - IIT</institute></nobr>;
+        <nobr><sup>2</sup><institute>University of Zagreb</institute></nobr>;
+        <nobr><sup>3</sup><institute>MIT</institute></nobr>;
+        <nobr><sup>4</sup><institute>Kempner Institute, Harvard</institute></nobr>
+    </address>
+    <a href="https://arxiv.org/abs/2604.18307" target="_blank" class="btn" style="color:#fff; background-color:#198754; border-color:#136e44;"><i class="ai ai-arxiv"></i> ArXiv</a>
+    <a href="https://arxiv.org/pdf/2604.18307" target="_blank" class="btn" style="color:#fff; background-color:#dc3545; border-color:#b72d3a;"><i class="far fa-file-pdf"></i> PDF</a>
+    <a href="https://github.com/technion-cs-nlp/reasoning-importance" target="_blank" class="btn" style="color:#fff; background-color:#212529; border-color:#212529;"><i class="fab fa-github"></i> Code</a>
+</header>
+
+<div class="container">
+
+    <h2 class="subtitle">TL;DR</h2>
+    <section>
+        <p>
+            Reasoning language models produce long chains-of-thought, but it is unclear whether every generated step is actually needed to reach the correct answer.
+            <mark>We show that reasoning models internally "know" which of their own reasoning steps are important, and encode this information directly in their activations, before later steps have even been generated.</mark>
+            We define step importance via <em>removability</em>: a step is important if dropping it from the chain breaks the ability of the model to reach the correct answer. 
+            <br>
+            We find that:
+            <br><p><span style="margin-left: 40px;"></span>
+            <b>(i)</b> an activation-gradient-based procedure isolates a small <em>core reasoning subsequence</em> that suffices to answer correctly,
+            <br><p><span style="margin-left: 40px;"></span>
+            <b>(ii)</b> nonlinear probes on <mark>activations recover step importance</mark> with high accuracy, <mark>whereas token-level features or context-less activations fail</mark>, and
+            <br><p><span style="margin-left: 40px;"></span>
+            <b>(iii)</b> activations of different models yield similar importance signals: training a probe on one model's activations can be used to predict another model's labels with high accuracy and high agreement.
+             <!-- and is not explained by surface-level cues such as step position, length, or category. -->
+        </p>
+    </section>
+
+    <h2 class="subtitle">Identifying causally important reasoning steps</h2>
+    <section class="methodology">
+        <p>
+            We define importance through <strong>removability</strong>: a step is important if removing it makes the model answer incorrectly or if it makes the answer not attainable. 
+            Starting from a model's full chain-of-thought, we greedily remove steps and check whether the model can still reach the correct answer. 
+            The remaining steps that cannot be removed form the <em>core reasoning subsequence</em>.
+        </p>
+        <p>
+            We compare three greedy variants for choosing how to rank steps for removal:
+        </p>
+        <ul>
+            <li><strong>Activation-based.</strong> Rank steps using <em>gradient attribution</em> (how much a step causally influences the activations of later steps in the chain).</li>
+            <li><strong>Token-based.</strong> Ask a strong LLM judge (Gemini-2.5-Pro) to score step importance from the text alone.</li>
+            <li><strong>Random.</strong> Remove steps in a random order.</li>
+        </ul>
+        <p>
+            The activation-based procedure yields the <em>shortest</em> core reasoning subsequences across models, meaning it correctly identifies more steps as removable.
+            Token-based judgments lag behind, indicating that which steps causally matter is not easily read off the surface text.
+        </p>
+        <figure>
+            <img src="img/harp-standard-best-method-win-rate.png" style="width:80%; max-width:800px;">
+            <figcaption>
+                Win-rate of each pruning variant on HARP across reasoning models. The activation-based procedure produces the smallest core reasoning subsequences.
+            </figcaption>
+        </figure>
+    </section>
+
+    <h2 class="subtitle">Step importance is (pre-hoc) encoded in activations</h2>
+    <section class="methodology">
+        <p>Once we have removability labels for each step, we ask a sharper question: <em>at the moment a step has just been generated, <strong>before</strong> the model continues the chain, do its activations already encode whether it will turn out to be important?</em></p>
+        <ul>
+            <li>We train nonlinear (MLP) probes to predict importance labels from the model's activation tensor, at each reasoning step.</li>
+            <li>The probes reach 80% accuracy at separating important from removable steps, well above token-level and surface-level baselines (LLM-as-a-judge, semantic embeddings, TF-IDF, trained ModernBERT).</li>
+            <li>The signal is genuinely <strong>pre-hoc</strong>: probes succeed using only the activations available <em>before</em> the dependent downstream steps exist.</li>
+        </ul>
+        <p>
+            In other words, <mark>step importance is encoded as a concept in a model's activations, without surfacing in the tokens themselves.</mark>.
+        </p>
+        <figure>
+            <img src="img/importance-classification-full-eval.png" style="width:90%; max-width:850px;">
+            <figcaption>
+                Importance classification accuracy across models. Activation-based MLP probes substantially outperform token-level baselines.
+            </figcaption>
+        </figure>
+    </section>
+
+    <h2 class="subtitle">Importance is cross-model and not surface-level</h2>
+    <section class="methodology">
+        <p>
+            If importance were just a quirk of a particular model, probes trained on one model would not transfer to another. We find the opposite:
+        </p>
+        <ul>
+            <li><strong>Cross-model transfer.</strong> A probe trained on the activations of one reasoning model predicts importance labels derived from a <em>different</em> reasoning model with accuracy comparable to within-model probing. This suggests importance is a shared, model-agnostic property of reasoning chain steps.</li>
+            <li><strong>Not explained by surface features.</strong> Surface-level features (such as a step's position in a reasoning chain, step length, or a step's semantic category) show low correlation with probe predictions.
+            <li><strong>Distributed encoding.</strong> The importance signal is not simple or localized to a single layer or token position, but rather spread across layers and positions of the reasoning step.</li>
+        </ul>
+        <figure>
+            <img src="img/harp-standard-cross-model-removability-prediction.png" style="width:80%; max-width:800px;">
+            <figcaption>
+                Cross-model importance prediction on HARP. Probes can predict one model's labels from another model's activations, with high agreement between labeling probes.
+            </figcaption>
+        </figure>
+        <figure>
+            <img src="img/DeepSeek-R1-Distill-Qwen-7B_harp-standard_probe_analysis_combined.png" style="width:95%; max-width:900px;">
+            <figcaption>
+                Probe analysis for DeepSeek-R1-Distill-Qwen-7B. Importance is encoded across layers and positions, and is largely uncorrelated with surface-level step features, confirming that the probe is not just exploiting trivial textual cues.
+            </figcaption>
+        </figure>
+    </section>
+
+    <h2 class="subtitle">How to cite</h2>
+    <div class="card">
+        <h3 class="card-header">bibtex</h3>
+        <div class="card-block">
+<pre class="card-text clickselect">
+@article{nikankin2026reasoning,
+    title={Reasoning Models Know What's Important, and Encode It in Their Activations},
+    author={Nikankin, Yaniv and Tutek, Martin and Ashuach, Tomer and Rosenfeld, Jonathan and Belinkov, Yonatan},
+    journal={arXiv preprint arXiv:2604.18307},
+    year={2026}
+  }
+</pre>
+        </div>
+    </div>
+    <p></p>
+
+</div>
+
+<footer>
+    <p>Forked from a template by Hadas Orgad | Technion | 2026</p>
+</footer>
+
+</body>
+</html>
