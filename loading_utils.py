@@ -12,8 +12,9 @@ def _load_results(
     dataset: str = "harp-standard",
     suffix: str = "",
     seed: int = 42,
+    subdir: str = "",
 ):
-    results_dir = os.path.join("results", model_name)
+    results_dir = os.path.join("results", model_name, subdir) if subdir else os.path.join("results", model_name)
 
     if difficulty is not None:
         files = [
@@ -122,3 +123,4 @@ def load_random_pruning_results(
     model_name: str, difficulty: Optional[int] = None, dataset: str = "harp-standard"
 ):
     return _load_results("random_pruning", model_name, difficulty, dataset)
+

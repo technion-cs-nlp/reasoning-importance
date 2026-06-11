@@ -60,7 +60,7 @@ def find_answer_sentence(
         sentences, gt_answer, boxed=True
     )
 
-    if answer_sentence_idx == AnswerError.WRONG_ANSWER:
+    if answer_sentence_idx == AnswerError.WRONG_BOXED_ANSWER:
         if verbose:
             logging.info(
                 f"WRONG answer found: GT ({gt_answer}) != Found ({answer_sentence})"
@@ -150,7 +150,6 @@ def find_shortcut_steps(
             tokenizer,
             n_resamples=n_resamples,
             seed=seed,
-            verbose=False,
         )[0]
 
         if suff >= sufficiency_threshold:
@@ -445,7 +444,6 @@ def main():
             tokenizer,
             n_resamples=args.n_resamples,
             seed=args.seed,
-            verbose=False,
         )[0]
 
         # Eval perplexities for full cot and empty cot

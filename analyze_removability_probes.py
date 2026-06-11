@@ -15,7 +15,9 @@ from typing import Dict, List, Tuple
 import numpy as np
 import torch
 from scipy.stats import pointbiserialr
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
@@ -367,7 +369,42 @@ def extract_surface_features(
     char_lengths = []
     n_numbers = []
     n_arithmetic = []
+    avg_tfidf_sims = []
+    max_tfidf_sims = []
+    all_query_sims = []
     category_counts = {cat: [] for cat in SENTENCE_CATEGORIES}
+
+    # Precompute per-entry TF-IDF pairwise cosine similarity matrices over
+    # the full chain of reasoning sentences in each entry, plus similarity of
+    # each sentence to the input problem (used as the MMR query).
+    tfidf_sim_cache: Dict[str, np.ndarray] = {}
+    query_sim_cache: Dict[str, np.ndarray] = {}
+    for entry_key in {item["entry_key"] for item in items}:
+        post_removal = processed_results.get(entry_key, {}).get("post_removal", {})
+        sentences = post_removal.get("sentences", [])
+        full_prompt = post_removal.get("full_prompt", "")
+        # Recover the input problem as everything before the first reasoning sentence.
+        if sentences and full_prompt:
+            query = full_prompt.split(sentences[0], 1)[0]
+        else:
+            query = ""
+        if len(sentences) < 1:
+            tfidf_sim_cache[entry_key] = np.zeros((0, 0))
+            query_sim_cache[entry_key] = np.zeros(0)
+            continue
+        try:
+            vectorizer = TfidfVectorizer()
+            tfidf = vectorizer.fit_transform(sentences + [query])
+            sent_vecs = tfidf[: len(sentences)]
+            query_vec = tfidf[len(sentences) :]
+            tfidf_sim_cache[entry_key] = cosine_similarity(sent_vecs)
+            query_sim_cache[entry_key] = cosine_similarity(
+                sent_vecs, query_vec
+            ).flatten()
+        except ValueError:
+            # All sentences contain only stop words / empty vocabulary
+            tfidf_sim_cache[entry_key] = np.zeros((len(sentences), len(sentences)))
+            query_sim_cache[entry_key] = np.zeros(len(sentences))
 
     for item in items:
         entry_key = item["entry_key"]
@@ -390,6 +427,24 @@ def extract_surface_features(
         n_numbers.append(len(NUMBER_PATTERN.findall(sentence)))
         n_arithmetic.append(len(ARITHMETIC_PATTERN.findall(sentence)))
 
+        # TF-IDF cosine similarity to previous reasoning steps in the chain
+        sim_matrix = tfidf_sim_cache.get(entry_key)
+        query_sims = query_sim_cache.get(entry_key)
+        if sim_matrix is not None and sent_idx > 0 and sent_idx < sim_matrix.shape[0]:
+            prev_sims = sim_matrix[sent_idx, :sent_idx]
+            avg_tfidf_sims.append(float(prev_sims.mean()))
+            max_tfidf_sims.append(float(prev_sims.max()))
+        else:
+            avg_tfidf_sims.append(0.0)
+            max_tfidf_sims.append(0.0)
+
+        # Problem similarity: TF-IDF cosine similarity to the input problem
+        if query_sims is not None and sent_idx < len(query_sims):
+            sim_to_query = float(query_sims[sent_idx])
+        else:
+            sim_to_query = 0.0
+        all_query_sims.append(sim_to_query)
+
         # Category features (binary: does sentence contain any marker from category?)
         for cat, markers in SENTENCE_CATEGORIES.items():
             has_cat = any(marker in sentence_lower for marker in markers)
@@ -402,6 +457,9 @@ def extract_surface_features(
         "char_length": np.array(char_lengths, dtype=np.float64),
         "n_numbers": np.array(n_numbers, dtype=np.float64),
         "n_arithmetic": np.array(n_arithmetic, dtype=np.float64),
+        "avg_tfidf_sim_prev": np.array(avg_tfidf_sims, dtype=np.float64),
+        "max_tfidf_sim_prev": np.array(max_tfidf_sims, dtype=np.float64),
+        "query_sim": np.array(all_query_sims, dtype=np.float64),
     }
     for cat, counts in category_counts.items():
         features[f"cat_{cat}"] = np.array(counts, dtype=np.float64)

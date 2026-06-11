@@ -40,6 +40,7 @@ from transformers import AutoTokenizer
 from loading_utils import (
     load_attribution_pruning_results,
     load_generations,
+    load_random_pruning_results,
     load_single_step_results,
 )
 from general_utils import set_deterministic, load_model, n_layers, d_model
@@ -54,7 +55,10 @@ from consts import (
     TEST_SIZE,
     WEIGHT_DECAY,
 )
-from removability_utils import extract_removable_nonremovable_entry_keys
+from removability_utils import (
+    extract_removable_nonremovable_entry_keys,
+    extract_removable_nonremovable_entry_keys_from_random,
+)
 
 _CLASSIFIER_TYPES = [
     t
@@ -1107,8 +1111,9 @@ def run_analysis(
     suffix = f"_{args.output_suffix}" if args.output_suffix else ""
 
     # Resolve embedding model identity (shared for both modes)
-    embed_model_id = args.embed_model_id or args.model_name
-    embed_model_path = args.embed_model_path or embed_model_id
+    model_id, model_path = MODEL_NAME_TO_ID_PATH[args.model_name]
+    embed_model_id = args.embed_model_id or model_id
+    embed_model_path = args.embed_model_path or model_path
     embed_model_name = embed_model_id.split("/")[-1]
 
     # Load model + tokenizer ONCE

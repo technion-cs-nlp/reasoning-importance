@@ -658,5 +658,7 @@ def _call_gemini_api(
     )
 
     response = model_instance.generate_content(prompt)
-
-    return response.text
+    if hasattr(response, 'text'): 
+        return response.text
+    else:
+        return None

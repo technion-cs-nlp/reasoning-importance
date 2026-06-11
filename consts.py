@@ -44,7 +44,7 @@ REMOVABILITY_CLASSIFIER_TYPES = [
     "simple_transformer",
 ]
 
-# TODO DELETE PATHS PRIOR TO PUBLISHING OR REPLACE DIR
+
 MODEL_NAME_TO_ID_PATH = {
     "gpt-oss-20b": (
         "openai/gpt-oss-20b",

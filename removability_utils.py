@@ -197,6 +197,74 @@ def extract_removable_nonremovable_entry_keys(
     return results
 
 
+# This function is only used for the circular ablation test, to check
+# if using importance labels derived from random-greedy pruning yields
+# high performing activation-based probes.
+def extract_removable_nonremovable_entry_keys_from_random(
+    generations: Dict,
+    random_pruning_results: Dict,
+    step_results: Dict,
+    suff_threshold: Optional[float] = SUFFICIENCY_THRESHOLD,
+    obtn_threshold: Optional[float] = OBTAINABILITY_THRESHOLD,
+) -> Dict[str, Dict[int, bool]]:
+    # Add prefix length intro attr results
+    for k in random_pruning_results:
+        random_pruning_results[k]["prefix_length"] = random_pruning_results[k][
+            "starting_n_kept"
+        ]
+
+    valid_keys = get_valid_entries(
+        generations,
+        step_results,
+        random_pruning_results,
+        suff_threshold,
+        prefix_step_limits=VALID_PREFIX_SENT_LIMITS,
+    )
+    results = {}
+
+    for entry_key in valid_keys:
+        random_pruning_entry = random_pruning_results[entry_key]
+        prefix_len = random_pruning_entry["prefix_length"]
+
+        is_removable_labels = {}
+        from consts import SEEDS
+
+        used_seeds = [s for s in SEEDS if str(s) in random_pruning_entry]
+        seed_masks = torch.ones((len(used_seeds), prefix_len), dtype=torch.bool)
+        for seed_idx, seed_key in enumerate(used_seeds):
+            for removal_data in random_pruning_entry[str(seed_key)]:
+                if is_good_prune(
+                    removal_data["suff"],
+                    removal_data["obtn"],
+                    suff_threshold,
+                    obtn_threshold,
+                ):
+                    seed_masks[seed_idx, removal_data["removed_sentence_idx"]] = False
+                else:
+                    break
+
+        # Steps removed across all seeds are labeled removable, while steps kept in all seed are labeled non-removable
+        for step_idx in range(prefix_len):
+            if all(seed_masks[:, step_idx]):
+                # Sentence is labeled as non-removable by the random pruning stage (kept in all seeds)
+                is_removable_labels[step_idx] = False
+            elif not any(seed_masks[:, step_idx]):
+                # Sentence is labeled as removable by the random pruning stage (removed in all seeds)
+                is_removable_labels[step_idx] = True
+            else:
+                pass
+
+        if is_removable_labels:
+            results[entry_key] = is_removable_labels
+
+    logging.info(
+        f"Extracted removability labels for {len(results)} entries "
+        f"({sum(sum(1 for v in d.values() if v) for d in results.values())} removable, "
+        f"{sum(sum(1 for v in d.values() if not v) for d in results.values())} non-removable)"
+    )
+    return results
+
+
 def get_min_passing_n_kept(
     grouped_results, iterative_results, prefix_length, suff_threshold, obtn_threshold
 ):
